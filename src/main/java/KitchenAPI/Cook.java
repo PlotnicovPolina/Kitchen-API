@@ -1,18 +1,46 @@
 package KitchenAPI;
 
-public class Cook implements Runnable{
+import java.util.ArrayList;
+
+public class Cook implements Runnable {
+    private int cook_id = count++;
     private int rank;
     private int proficiency;
     private String name;
     private String catch_phrase;
-    private static final String[] names = new String[]{"John", "Monkey", "Li", "Dinara", "Artem", "Elina", "Liam", "Olivia", "Noah", "Emma", "Oliver","Ava", "William", "Sophia", "Elijah", "Isabella", "James", "Charlotte", "Benjamin", "Amelia", "Lucas", "Mia", "Mason", "Harper", "Ethan", "Evelyn"};
+    private static final String[] names = new String[]{"John", "Monkey", "Li", "Dinara", "Artem", "Elina", "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "William", "Sophia", "Elijah", "Isabella", "James", "Charlotte", "Benjamin", "Amelia", "Lucas", "Mia", "Mason", "Harper", "Ethan", "Evelyn"};
     private static final String[] catch_phrases = new String[]{"Ciao!", "Salaam alei-kun!", "Comment ca va!", "Salve!", "Ave!", "Hello!", "Ola!", "Aloha!", "Shalom!", "Salut!", "Bone die!", "Pozdravljeni!", "Elo!", "Bonjour!", "Konnichiwa!"};
+    private static final ArrayList<Dish> queue = new ArrayList<>();
+    private static int count = 0;
 
     private static int cooksProf;
 
+    public Cook(int rank, int proficiency) {
+        this.rank = rank;
+        this.proficiency = proficiency;
+        this.name = nameGenerator();
+        this.catch_phrase = catchPhraseGenerator();
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i < proficiency; i++) {
+            new Thread(new Proficiency()).start();
+        }
+    }
+
+    public void queueGenerator(Dish dish) {
+        queue.add(dish);
+    }
+
+    public static ArrayList<Dish> getQueue() {
+        return queue;
+    }
+
     public static void setCooksProf() {
-        for (Cook cook :KitchenApiApplication.getCooks())
-            cooksProf += cook.proficiency;
+        for (Cook cook : KitchenApiApplication.getCooksRank3()) cooksProf += cook.proficiency;
+        for (Cook cook : KitchenApiApplication.getCooksRank2()) cooksProf += cook.proficiency;
+        for (Cook cook : KitchenApiApplication.getCooksRank1()) cooksProf += cook.proficiency;
     }
 
     public static void reduceCooksProf(int value) {
@@ -27,19 +55,7 @@ public class Cook implements Runnable{
         return cooksProf;
     }
 
-    public Cook(int rank, int proficiency) {
-        this.rank = rank;
-        this.proficiency = proficiency;
-        this.name = nameGenerator();
-        this.catch_phrase = catchPhraseGenerator();
-    }
-
-    @Override
-    public void run() {
-
-    }
-
-    public void getCook(){
+    public void getCook() {
         System.out.println("Cook: name = " + name + ", rank = " + rank + ", proficiency = " + proficiency + ", catch_phrase = " + catch_phrase);
     }
 
@@ -51,35 +67,100 @@ public class Cook implements Runnable{
         this.rank = rank;
     }
 
-    public int getProficiency() {
-        return proficiency;
+    private String nameGenerator() {
+        return names[(int) (Math.random() * 25)];
     }
 
-    public void setProficiency(int proficiency) {
-        this.proficiency = proficiency;
+    private String catchPhraseGenerator() {
+        return catch_phrases[(int) (Math.random() * 14)];
     }
 
-    public String getName() {
-        return name;
+    public int getCook_id() {
+        return cook_id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setCook_id(int cook_id) {
+        this.cook_id = cook_id;
     }
 
-    public String getCatch_phrase() {
-        return catch_phrase;
-    }
+    class Proficiency implements Runnable {
+        private final ArrayList<Dish> queue = Cook.queue;
+        private final ArrayList<Order> orders = Handler.getOrders();
+        private final ArrayList<Cooking_Apparatus> ovens = KitchenApiApplication.getOvens();
+        private final ArrayList<Cooking_Apparatus> stoves = KitchenApiApplication.getStoves();
 
-    public void setCatch_phrase(String catch_phrase) {
-        this.catch_phrase = catch_phrase;
-    }
+        @Override
+        public void run() {
+            while (true) {
+                for (int i = 0; i < queue.size(); i++) {
+                    Dish dish = queue.get(i);
+                    if (dish.isDishBln() && dish.tryLock()) {
+                        int time_preparation = dish.getPreparation_time() * 1000 / 2;
+                        try {
+                            Thread.sleep(time_preparation);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        if (dish.getCooking_apparatus() != null) {
+                            switch (dish.getCooking_apparatus()) {
+                                case "oven": {
+                                    prepareDIsh(time_preparation, ovens);
+                                    break;
+                                }
+                                case "stove": {
+                                    prepareDIsh(time_preparation, stoves);
+                                    break;
+                                }
+                            }
+                        }
 
-    private String nameGenerator(){
-       return names[(int) (Math.random()*25)];
-    }
+                        Order order = findOrder(dish.getOrder_id());
+                        order.setNumberFreeDishes();
+                        Cooking_Detail cooking_detail = new Cooking_Detail(dish.getItem(), dish.getCookId());
+                        order.addCookingDetails(cooking_detail);
+                        dish.setDishBln(false);
+                        queue.remove(dish);
+                        System.out.println(dish.getName() + ", order " + dish.getOrder_id() + " was prepared by " + cook_id + ". " + name);
+                        dish.unLock();
+                    }
 
-    private String catchPhraseGenerator(){
-        return catch_phrases[(int) (Math.random()*14)];
+                }
+
+            }
+
+        }
+
+        private void prepareDIsh(int time_preparation, ArrayList<Cooking_Apparatus> apparatuses) {
+            boolean locked = false;
+            Cooking_Apparatus apparatus = null;
+            for (Cooking_Apparatus stove : apparatuses) {
+                if (stove.tryLock()) {
+                    apparatus = stove;
+                    locked = true;
+                    break;
+                }
+            }
+            if (!locked) {
+                apparatus = apparatuses.get((int) (Math.random() * (apparatuses.size() - 1)));
+                apparatus.setLock();
+            }
+            try {
+                Thread.sleep(time_preparation);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            apparatus.unLock();
+        }
+
+        private Order findOrder(int order_id) {
+            Order init = null;
+            for (Order order : orders) {
+                if (order.getOrder_id() == order_id) {
+                    init = order;
+                    break;
+                }
+            }
+            return init;
+        }
     }
 }

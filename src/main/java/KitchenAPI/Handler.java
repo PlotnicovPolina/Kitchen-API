@@ -10,7 +10,7 @@ import java.util.ArrayList;
 @RestController
 public class Handler {
 
-    private static ArrayList<Order> orders = new ArrayList<>();
+    private static final ArrayList<Order> orders = new ArrayList<>();
 
     private static void add(Order order) {
         orders.add(order);
@@ -22,6 +22,7 @@ public class Handler {
 
     @PostMapping(value = "/order", consumes = MediaType.APPLICATION_JSON_VALUE)
     public String get(@RequestBody Order order) {
+        order.setEndPriority();
         add(order);
         return "200";
     }

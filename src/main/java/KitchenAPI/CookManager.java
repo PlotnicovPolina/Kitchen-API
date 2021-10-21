@@ -1,30 +1,121 @@
 package KitchenAPI;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class CookManager implements Runnable {
-    private ArrayList<Order> orders = Handler.getOrders();
-    private ArrayList<Cook> cooks = KitchenApiApplication.getCooks();
-    private ArrayList<Dish> dishes = new ArrayList();
+    private final ArrayList<Order> orders = Handler.getOrders();
+    private final ArrayList<Cook> cooksRank3 = KitchenApiApplication.getCooksRank3();
+    private final ArrayList<Cook> cooksRank2 = KitchenApiApplication.getCooksRank2();
+    private final ArrayList<Cook> cooksRank1 = KitchenApiApplication.getCooksRank1();
+    private static final ArrayList<Dish> dishes = new ArrayList();
+    private int cookProf = Cook.getCooksProf();
+    private int numberOfItems = 0;
 
     @Override
     public void run() {
-        int cookProf = Cook.getCooksProf();
-        int numberOfItems = 0;
-
+        Cook cook;
+        new Thread(new Assistant()).start();
         while (true){
-
-            endPriority();
-            while (numberOfItems < cookProf){
+            while (numberOfItems < cookProf && !(orders.isEmpty())){
                 Order maxPriorityOrder = findMaxPriority();
-                numberOfItems+=maxPriorityOrder.getNumberOfReadyDishes();
+                numberOfItems+=maxPriorityOrder.getNumberFreeDishes();
                 for (int item: maxPriorityOrder.getItems()) {
-                    dishes.add(new Dish(maxPriorityOrder.getOrder_id(), item, maxPriorityOrder.getPriority(), maxPriorityOrder.getEndPriority()));
+                    Dish dish = new Dish(maxPriorityOrder.getOrder_id(), item, maxPriorityOrder.getPriority(), maxPriorityOrder.getEndPriority());
+                    switch (dish.getComplexity()){
+                        case 3:
+                        {
+                            if(cooksRank3.isEmpty()){
+                                System.out.println("There is no cook, who can take order!");
+                            }
+                            else {
+                                cook =findMinQueue(cooksRank3);
+                                cook.queueGenerator(dish);
+                                dish.setCookId(cook.getCook_id());
+                                Cook.reduceCooksProf(1);
+                            }
+                            break;
+                        }
+                        case 2:
+                        {
+                            if(cooksRank2.isEmpty()){
+                                if(cooksRank3.isEmpty()){
+                                    System.out.println("There is no cook, who can take order!");
+                                }
+                                else {
+                                    cook =findMinQueue(cooksRank3);
+                                    cook.queueGenerator(dish);
+                                    dish.setCookId(cook.getCook_id());
+                                    Cook.reduceCooksProf(1);
+                                }
+                            }
+                            else {
+                                if (cooksRank3.isEmpty()){
+                                    cook =findMinQueue(cooksRank2);
+                                }
+                                else{
+                                    if(findMinQueue(cooksRank2).getQueue().size() < findMinQueue(cooksRank3).getQueue().size()) cook =findMinQueue(cooksRank2);
+                                    else cook =findMinQueue(cooksRank3);
+                                }
+                                cook.queueGenerator(dish);
+                                dish.setCookId(cook.getCook_id());
+                                Cook.reduceCooksProf(1);
+                            }
+                            break;
+                        }
+                        case 1:
+                        {
+                            if (cooksRank1.isEmpty()){
+                                if(cooksRank2.isEmpty()){
+                                    if(cooksRank3.isEmpty())  System.out.println("There is no cook, who can take order!");
+                                    else {
+                                        cook =findMinQueue(cooksRank3);
+                                        cook.queueGenerator(dish);
+                                        dish.setCookId(cook.getCook_id());
+                                    }
+                                }
+                                else {
+                                    if (cooksRank3.isEmpty()) {
+                                        cook =findMinQueue(cooksRank2);
+                                    }
+                                    else{
+                                        if (findMinQueue(cooksRank2).getQueue().size() < findMinQueue(cooksRank3).getQueue().size()) cook =findMinQueue(cooksRank2);
+                                        else cook =findMinQueue(cooksRank3);
+                                    }
+                                    cook.queueGenerator(dish);
+                                    dish.setCookId(cook.getCook_id());
+                                }
+                            }
+                            else {
+                                if (cooksRank2.isEmpty()){
+                                    if(cooksRank3.isEmpty()) cook = findMinQueue(cooksRank1);
+                                    else {
+                                        if(findMinQueue(cooksRank1).getQueue().size() < findMinQueue(cooksRank3).getQueue().size())  cook = findMinQueue(cooksRank1);
+                                        else cook = findMinQueue(cooksRank3);
+                                    }
+                                }
+                                else {
+                                    if (cooksRank3.isEmpty()){
+                                        if(findMinQueue(cooksRank1).getQueue().size() < findMinQueue(cooksRank2).getQueue().size()) cook = findMinQueue(cooksRank1);
+                                        else cook = findMinQueue(cooksRank2);
+                                    }
+                                    else {
+                                        if(findMinQueue(cooksRank1).getQueue().size() < findMinQueue(cooksRank2).getQueue().size() && findMinQueue(cooksRank1).getQueue().size() < findMinQueue(cooksRank3).getQueue().size() )
+                                            cook = findMinQueue(cooksRank1);
+                                        else if(findMinQueue(cooksRank2).getQueue().size() < findMinQueue(cooksRank1).getQueue().size() && findMinQueue(cooksRank2).getQueue().size() < findMinQueue(cooksRank3).getQueue().size())
+                                            cook = findMinQueue(cooksRank2);
+                                        else cook = findMinQueue(cooksRank3);
+                                    }
+                                }
+                                cook.queueGenerator(dish);
+                                dish.setCookId(cook.getCook_id());
+                            }
+                            Cook.reduceCooksProf(1);
+                            break;
+                        }
+                    }
                 }
                 maxPriorityOrder.setBln(false);
             }
-
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -33,28 +124,37 @@ public class CookManager implements Runnable {
         }
     }
 
-    private void endPriority(){
-        for (Order order: orders) {
-            int endPriority = order.getPriority() - order.getOrder_id();
-            order.setEndPriority(endPriority);
-        }
-    }
-
     private Order findMaxPriority(){
-        Order order = null;
+        Order order = orders.get(orders.size()-1);
         if (!orders.isEmpty()) {
-            order = orders.get(0);
-
-            for (int i = 0; i < orders.size(); i++)
+            for (int i = 0; i < orders.size(); i++) {
                 if (orders.get(i).getEndPriority()>order.getEndPriority() && orders.get(i).isBln()) order = orders.get(i);
+            }
 
         }
         return order;
     }
+    private Cook findMinQueue(ArrayList<Cook> cooks){
+        int min = Integer.MAX_VALUE;
+        Cook minCook = null;
+        for (Cook cook : cooks)
+        {
+            if(cook.getQueue().size() < min) {
+                min = cook.getQueue().size();
+                minCook = cook;
+            }
+        }
+        return minCook;
+    }
+}
 
+class Assistant implements Runnable{
 
+    @Override
+    public void run() {
+        while (true){
 
+        }
 
-
-
+    }
 }
