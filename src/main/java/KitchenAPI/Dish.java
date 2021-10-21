@@ -1,7 +1,11 @@
 package KitchenAPI;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 public class Dish {
+    private int dish_id = count++;
     private int order_id;
+    private int cook_id;
     private int item;
     private int priority;
     private int endPriority;
@@ -9,12 +13,28 @@ public class Dish {
     private int preparation_time;
     private int complexity;
     private String cooking_apparatus;
+    private static int count = 0;
+    private boolean dishBln = true;
+
+    private ReentrantLock lock = new ReentrantLock();
 
     public Dish(int order_id, int item, int priority, int endPriority) {
         this.order_id = order_id;
         this.item = item;
         this.priority = priority;
         this.endPriority = endPriority;
+        this.name = getName();
+        this.preparation_time = getPreparation_time();
+        this.complexity = getComplexity();
+        this.cooking_apparatus = getCooking_apparatus();
+    }
+
+    public boolean tryLock(){
+        return lock.tryLock();
+    }
+
+    public void unLock(){
+        lock.unlock();
     }
 
     public String getName() {
@@ -96,6 +116,22 @@ public class Dish {
         return cooking_apparatus;
     }
 
+    @Override
+    public String toString() {
+        return "Dish{" +
+                "dish_id=" + dish_id +
+                ", order_id=" + order_id +
+                ", cook_id=" + cook_id +
+                ", item=" + item +
+                ", priority=" + priority +
+                ", endPriority=" + endPriority +
+                ", name='" + name + '\'' +
+                ", preparation_time=" + preparation_time +
+                ", complexity=" + complexity +
+                ", cooking_apparatus='" + cooking_apparatus + '\'' +
+                '}';
+    }
+
     public int getOrder_id() {
         return order_id;
     }
@@ -126,5 +162,21 @@ public class Dish {
 
     public void setEndPriority(int endPriority) {
         this.endPriority = endPriority;
+    }
+
+    public int getCookId() {
+        return cook_id;
+    }
+
+    public void setCookId(int cook_id) {
+        this.cook_id = cook_id;
+    }
+
+    public boolean isDishBln() {
+        return dishBln;
+    }
+
+    public void setDishBln(boolean dishBln) {
+        this.dishBln = dishBln;
     }
 }
