@@ -3,8 +3,8 @@ package KitchenAPI;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class KitchenApiApplication {
@@ -15,8 +15,9 @@ public class KitchenApiApplication {
 	private static ArrayList<Cooking_Apparatus> stoves = new ArrayList<>();
 	private static int numberOfStove = 2;
 	private static int numberOfOven = 1;
+	private static TimeUnit unit = TimeUnit.SECONDS;
 
-	public static void main(String[] args) throws IOException, InterruptedException {
+	public static void main(String[] args){
 		SpringApplication.run(KitchenApiApplication.class, args);
 
 		cooksGenerator(1,1,2);
@@ -63,6 +64,10 @@ public class KitchenApiApplication {
 		int proficiency = rank;
 		if (Math.random() > 0.5) proficiency++;
 		return  proficiency;
+	}
+
+	public static TimeUnit getUnit() {
+		return unit;
 	}
 
 	public static ArrayList<Cook> getCooksRank3(){

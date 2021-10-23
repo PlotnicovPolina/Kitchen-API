@@ -1,6 +1,7 @@
 package KitchenAPI;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class Cook implements Runnable {
     private int cook_id = count++;
@@ -14,6 +15,8 @@ public class Cook implements Runnable {
     private static int count = 0;
 
     private static int cooksProf;
+
+    private static final TimeUnit unit = KitchenApiApplication.getUnit();
 
     public Cook(int rank, int proficiency) {
         this.rank = rank;
@@ -95,12 +98,15 @@ public class Cook implements Runnable {
                 for (int i = 0; i < queue.size(); i++) {
                     Dish dish = queue.get(i);
                     if (dish.isDishBln() && dish.tryLock()) {
-                        int time_preparation = dish.getPreparation_time() * 1000 / 2;
+                        int time_preparation = dish.getPreparation_time()/ 2;
                         try {
-                            Thread.sleep(time_preparation);
+                            unit.sleep(time_preparation);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        System.out.println(dish.getName() + ", order " + dish.getOrder_id() + " is preparing by " + cook_id + ". " + name);
+                        Order order = findOrder(dish.getOrder_id());
+                        if (order.getNumberFreeDishes()==order.getItems().length && order.getCooking_time()==0) order.setCooking_time(unit.convert(System.nanoTime(),TimeUnit.NANOSECONDS));
                         if (dish.getCooking_apparatus() != null) {
                             switch (dish.getCooking_apparatus()) {
                                 case "oven": {
@@ -112,15 +118,18 @@ public class Cook implements Runnable {
                                     break;
                                 }
                             }
+                        } else {
+                            prepareDIsh(time_preparation,null);
                         }
-
-                        Order order = findOrder(dish.getOrder_id());
-                        order.setNumberFreeDishes();
                         Cooking_Detail cooking_detail = new Cooking_Detail(dish.getItem(), dish.getCookId());
                         order.addCookingDetails(cooking_detail);
                         dish.setDishBln(false);
                         queue.remove(dish);
-                        System.out.println(dish.getName() + ", order " + dish.getOrder_id() + " was prepared by " + cook_id + ". " + name);
+                        order.setNumberFreeDishes();
+                        String tmp = "";
+                        if (order.getNumberFreeDishes() == 0) {order.setCooking_time(unit.convert(System.nanoTime(),TimeUnit.NANOSECONDS)); tmp = " in "+order.getCooking_time()+" "+unit.name(); }
+                        System.out.println(dish.getName() + ", order " + dish.getOrder_id() + " was prepared by " + cook_id + ". " + name+tmp);
+
                         dish.unLock();
                     }
 
@@ -133,6 +142,7 @@ public class Cook implements Runnable {
         private void prepareDIsh(int time_preparation, ArrayList<Cooking_Apparatus> apparatuses) {
             boolean locked = false;
             Cooking_Apparatus apparatus = null;
+            if (apparatuses!=null){
             for (Cooking_Apparatus stove : apparatuses) {
                 if (stove.tryLock()) {
                     apparatus = stove;
@@ -145,11 +155,19 @@ public class Cook implements Runnable {
                 apparatus.setLock();
             }
             try {
-                Thread.sleep(time_preparation);
+                unit.sleep(time_preparation);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            apparatus.unLock();
+            apparatus.unLock(); } else {
+
+                try {
+                    unit.sleep(time_preparation);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            Cook.increaseCooksProf(1);
         }
 
         private Order findOrder(int order_id) {

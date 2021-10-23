@@ -1,6 +1,10 @@
 package KitchenAPI;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Order {
     private int order_id;
@@ -10,19 +14,34 @@ public class Order {
     private int priority;
     private float max_wait;
     private long pick_up_time;
-    private int cooking_time;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private long cooking_time = 0;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private ArrayList<Cooking_Detail> cooking_details = new ArrayList<>();
 
+    @JsonIgnore
     private int numberFreeDishes;
+    @JsonIgnore
     private int endPriority;
+    @JsonIgnore
     private boolean bln = true;
 
     @Override
     public String toString() {
-        return "Order: id =" + order_id + ", priority = " + priority + ", numberOfReadyDishes = " + numberFreeDishes + ", endPriority = " + endPriority;
-    }
-
-    public Order() {
+        return "Order{" +
+                "order_id=" + order_id +
+                ", table_id=" + table_id +
+                ", waiter_id=" + waiter_id +
+                ", items=" + Arrays.toString(items) +
+                ", priority=" + priority +
+                ", max_wait=" + max_wait +
+                ", pick_up_time=" + pick_up_time +
+                ", cooking_time=" + cooking_time +
+                ", cooking_details=" + cooking_details +
+                ", numberFreeDishes=" + numberFreeDishes +
+                ", endPriority=" + endPriority +
+                ", bln=" + bln +
+                '}';
     }
 
     public int getOrder_id() {
@@ -110,12 +129,12 @@ public class Order {
         this.bln = bln;
     }
 
-    public int getCooking_time() {
+    public long getCooking_time() {
         return cooking_time;
     }
 
-    public void setCooking_time(int cooking_time) {
-        this.cooking_time = cooking_time;
+    public void setCooking_time(long cooking_time) {
+        this.cooking_time = cooking_time - this.cooking_time;
     }
 
     public ArrayList<Cooking_Detail> getCooking_details() {
@@ -129,4 +148,5 @@ public class Order {
     public  void addCookingDetails(Cooking_Detail cooking_detail){
         cooking_details.add(cooking_detail);
     }
+
 }
