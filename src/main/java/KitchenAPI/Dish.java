@@ -123,11 +123,6 @@ public class Dish {
                 ", order_id=" + order_id +
                 ", cook_id=" + cook_id +
                 ", item=" + item +
-                ", priority=" + priority +
-                ", endPriority=" + endPriority +
-                ", name='" + name + '\'' +
-                ", preparation_time=" + preparation_time +
-                ", complexity=" + complexity +
                 ", cooking_apparatus='" + cooking_apparatus + '\'' +
                 '}';
     }

@@ -8,4 +8,20 @@ public class Cooking_Detail {
         this.food_id = food_id;
         this.cook_id = cook_id;
     }
+
+    public int getFood_id() {
+        return food_id;
+    }
+
+    public int getCook_id() {
+        return cook_id;
+    }
+
+    @Override
+    public String toString() {
+        return "Cooking_Detail{" +
+                "food_id=" + food_id +
+                ", cook_id=" + cook_id +
+                '}';
+    }
 }

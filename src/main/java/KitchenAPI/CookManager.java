@@ -1,12 +1,21 @@
 package KitchenAPI;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class CookManager implements Runnable {
     private final ArrayList<Order> orders = Handler.getOrders();
     private final ArrayList<Cook> cooksRank3 = KitchenApiApplication.getCooksRank3();
     private final ArrayList<Cook> cooksRank2 = KitchenApiApplication.getCooksRank2();
     private final ArrayList<Cook> cooksRank1 = KitchenApiApplication.getCooksRank1();
+    private static final TimeUnit unit = KitchenApiApplication.getUnit();
     private static final ArrayList<Dish> dishes = new ArrayList();
     private int cookProf = Cook.getCooksProf();
     private int numberOfItems = 0;
@@ -16,8 +25,9 @@ public class CookManager implements Runnable {
         Cook cook;
         new Thread(new Assistant()).start();
         while (true){
-            while (numberOfItems < cookProf && !(orders.isEmpty())){
+            while (/*numberOfItems < cookProf && */!(orders.isEmpty())){
                 Order maxPriorityOrder = findMaxPriority();
+                if (maxPriorityOrder==null) continue;
                 numberOfItems+=maxPriorityOrder.getNumberFreeDishes();
                 for (int item: maxPriorityOrder.getItems()) {
                     Dish dish = new Dish(maxPriorityOrder.getOrder_id(), item, maxPriorityOrder.getPriority(), maxPriorityOrder.getEndPriority());
@@ -116,24 +126,28 @@ public class CookManager implements Runnable {
                 }
                 maxPriorityOrder.setBln(false);
             }
+
             try {
-                Thread.sleep(1000);
+                unit.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
         }
     }
 
     private Order findMaxPriority(){
-        Order order = orders.get(orders.size()-1);
-        if (!orders.isEmpty()) {
+        Order order = null;
+        if (!orders.isEmpty() && orders != null) {
             for (int i = 0; i < orders.size(); i++) {
-                if (orders.get(i).getEndPriority()>order.getEndPriority() && orders.get(i).isBln()) order = orders.get(i);
+                Order toCompare = orders.get(i);
+                if (toCompare == null) continue;
+                if (toCompare.isBln() && (order == null || toCompare.getEndPriority() > order.getEndPriority())) { order = toCompare; }
             }
-
         }
         return order;
     }
+
     private Cook findMinQueue(ArrayList<Cook> cooks){
         int min = Integer.MAX_VALUE;
         Cook minCook = null;
@@ -145,16 +159,5 @@ public class CookManager implements Runnable {
             }
         }
         return minCook;
-    }
-}
-
-class Assistant implements Runnable{
-
-    @Override
-    public void run() {
-        while (true){
-
-        }
-
     }
 }
