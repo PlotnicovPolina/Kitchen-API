@@ -25,7 +25,7 @@ public class CookManager implements Runnable {
         Cook cook;
         new Thread(new Assistant()).start();
         while (true){
-            while (/*numberOfItems < cookProf && */!(orders.isEmpty())){
+            while ( !(orders.isEmpty())){
                 Order maxPriorityOrder = findMaxPriority();
                 if (maxPriorityOrder==null) continue;
                 numberOfItems+=maxPriorityOrder.getNumberFreeDishes();
