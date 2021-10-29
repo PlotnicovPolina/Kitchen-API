@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class Cook implements Runnable {
-    private int cook_id = count++;
-    private int rank;
-    private int proficiency;
-    private String name;
-    private String catch_phrase;
+    private final int cook_id = count++;
+    private final int rank;
+    private final int proficiency;
+    private final String name;
+    private final String catch_phrase;
     private static final String[] names = new String[]{"John", "Monkey", "Li", "Dinara", "Artem", "Elina", "Liam", "Olivia", "Noah", "Emma", "Oliver", "Ava", "William", "Sophia", "Elijah", "Isabella", "James", "Charlotte", "Benjamin", "Amelia", "Lucas", "Mia", "Mason", "Harper", "Ethan", "Evelyn"};
     private static final String[] catch_phrases = new String[]{"Ciao!", "Salaam alei-kun!", "Comment ca va!", "Salve!", "Ave!", "Hello!", "Ola!", "Aloha!", "Shalom!", "Salut!", "Bone die!", "Pozdravljeni!", "Elo!", "Bonjour!", "Konnichiwa!"};
     private static final ArrayList<Dish> queue = new ArrayList<>();
@@ -40,34 +40,8 @@ public class Cook implements Runnable {
         return queue;
     }
 
-    public static void setCooksProf() {
-        for (Cook cook : KitchenApiApplication.getCooksRank3()) cooksProf += cook.proficiency;
-        for (Cook cook : KitchenApiApplication.getCooksRank2()) cooksProf += cook.proficiency;
-        for (Cook cook : KitchenApiApplication.getCooksRank1()) cooksProf += cook.proficiency;
-    }
-
-    public static void reduceCooksProf(int value) {
-        cooksProf -= value;
-    }
-
-    public static void increaseCooksProf(int value) {
-        cooksProf += value;
-    }
-
-    public static int getCooksProf() {
-        return cooksProf;
-    }
-
     public void getCook() {
         System.out.println("Cook: name = " + name + ", rank = " + rank + ", proficiency = " + proficiency + ", catch_phrase = " + catch_phrase);
-    }
-
-    public int getRank() {
-        return rank;
-    }
-
-    public void setRank(int rank) {
-        this.rank = rank;
     }
 
     private String nameGenerator() {
@@ -82,10 +56,6 @@ public class Cook implements Runnable {
         return cook_id;
     }
 
-    public void setCook_id(int cook_id) {
-        this.cook_id = cook_id;
-    }
-
     class Proficiency implements Runnable {
         private final ArrayList<Dish> queue = Cook.queue;
         private final ArrayList<Order> orders = Handler.getOrders();
@@ -97,8 +67,8 @@ public class Cook implements Runnable {
             while (true) {
                 for (int i = 0; i < queue.size(); i++) {
                     Dish dish = queue.get(i);
-                    if (dish.isDishBln() && dish.tryLock()) {
-                        int time_preparation = dish.getPreparation_time()/ 2;
+                    if (dish != null && dish.isDishBln() && dish.tryLock()) {
+                        int time_preparation = dish.getPreparation_time() / 2;
                         try {
                             unit.sleep(time_preparation);
                         } catch (InterruptedException e) {
@@ -129,7 +99,6 @@ public class Cook implements Runnable {
                         String tmp = "";
                         if (order.getNumberFreeDishes() == 0) {order.setCooking_time(unit.convert(System.nanoTime(),TimeUnit.NANOSECONDS)); tmp = " in "+order.getCooking_time()+" "+unit.name(); }
                         System.out.println(dish.getName() + ", order " + dish.getOrder_id() + " was prepared by " + cook_id + ". " + name+tmp);
-
                         dish.unLock();
                     }
 
@@ -167,7 +136,6 @@ public class Cook implements Runnable {
                     e.printStackTrace();
                 }
             }
-            Cook.increaseCooksProf(1);
         }
 
         private Order findOrder(int order_id) {

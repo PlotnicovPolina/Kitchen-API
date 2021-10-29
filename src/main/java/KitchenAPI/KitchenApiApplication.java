@@ -11,17 +11,16 @@ public class KitchenApiApplication {
 	private static final ArrayList<Cook> cooksRank3 = new ArrayList<>();
 	private static final ArrayList<Cook> cooksRank2 = new ArrayList<>();
 	private static final ArrayList<Cook> cooksRank1 = new ArrayList<>();
-	private static ArrayList<Cooking_Apparatus> ovens = new ArrayList<>();
-	private static ArrayList<Cooking_Apparatus> stoves = new ArrayList<>();
-	private static int numberOfStove = 2;
-	private static int numberOfOven = 1;
-	private static TimeUnit unit = TimeUnit.SECONDS;
+	private static final ArrayList<Cooking_Apparatus> ovens = new ArrayList<>();
+	private static final ArrayList<Cooking_Apparatus> stoves = new ArrayList<>();
+	private static final int  numberOfStove = 2;
+	private static final int numberOfOven = 1;
+	private static final TimeUnit unit = TimeUnit.SECONDS;
 
 	public static void main(String[] args){
 		SpringApplication.run(KitchenApiApplication.class, args);
 
-		cooksGenerator(1,1,2);
-		Cook.setCooksProf();
+		cooksGenerator(2,1,1);
 		CookManager cookManager = new CookManager();
 		new Thread(cookManager).start();
 		for (Cook cook : cooksRank3) {

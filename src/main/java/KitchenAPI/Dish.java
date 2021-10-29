@@ -3,20 +3,20 @@ package KitchenAPI;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Dish {
-    private int dish_id = count++;
-    private int order_id;
+    private final int dish_id = count++;
+    private final int order_id;
     private int cook_id;
-    private int item;
-    private int priority;
+    private final int item;
+    private final int priority;
     private int endPriority;
-    private String name;
-    private int preparation_time;
-    private int complexity;
-    private String cooking_apparatus;
+    private final String name;
+    private final int preparation_time;
+    private final int complexity;
+    private final String cooking_apparatus;
     private static int count = 0;
     private boolean dishBln = true;
 
-    private ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     public Dish(int order_id, int item, int priority, int endPriority) {
         this.order_id = order_id;
@@ -131,24 +131,8 @@ public class Dish {
         return order_id;
     }
 
-    public void setOrder_id(int order_id) {
-        this.order_id = order_id;
-    }
-
     public int getItem() {
         return item;
-    }
-
-    public void setItem(int item) {
-        this.item = item;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
     }
 
     public int getEndPriority() {

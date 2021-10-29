@@ -1,12 +1,5 @@
 package KitchenAPI;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.client.RestTemplate;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -16,8 +9,6 @@ public class CookManager implements Runnable {
     private final ArrayList<Cook> cooksRank2 = KitchenApiApplication.getCooksRank2();
     private final ArrayList<Cook> cooksRank1 = KitchenApiApplication.getCooksRank1();
     private static final TimeUnit unit = KitchenApiApplication.getUnit();
-    private static final ArrayList<Dish> dishes = new ArrayList();
-    private int cookProf = Cook.getCooksProf();
     private int numberOfItems = 0;
 
     @Override
@@ -25,10 +16,9 @@ public class CookManager implements Runnable {
         Cook cook;
         new Thread(new Assistant()).start();
         while (true){
-            while ( !(orders.isEmpty())){
+            while ( !(orders.isEmpty()) ){
                 Order maxPriorityOrder = findMaxPriority();
                 if (maxPriorityOrder==null) continue;
-                numberOfItems+=maxPriorityOrder.getNumberFreeDishes();
                 for (int item: maxPriorityOrder.getItems()) {
                     Dish dish = new Dish(maxPriorityOrder.getOrder_id(), item, maxPriorityOrder.getPriority(), maxPriorityOrder.getEndPriority());
                     switch (dish.getComplexity()){
@@ -41,7 +31,6 @@ public class CookManager implements Runnable {
                                 cook =findMinQueue(cooksRank3);
                                 cook.queueGenerator(dish);
                                 dish.setCookId(cook.getCook_id());
-                                Cook.reduceCooksProf(1);
                             }
                             break;
                         }
@@ -55,7 +44,6 @@ public class CookManager implements Runnable {
                                     cook =findMinQueue(cooksRank3);
                                     cook.queueGenerator(dish);
                                     dish.setCookId(cook.getCook_id());
-                                    Cook.reduceCooksProf(1);
                                 }
                             }
                             else {
@@ -68,7 +56,6 @@ public class CookManager implements Runnable {
                                 }
                                 cook.queueGenerator(dish);
                                 dish.setCookId(cook.getCook_id());
-                                Cook.reduceCooksProf(1);
                             }
                             break;
                         }
@@ -119,26 +106,23 @@ public class CookManager implements Runnable {
                                 cook.queueGenerator(dish);
                                 dish.setCookId(cook.getCook_id());
                             }
-                            Cook.reduceCooksProf(1);
                             break;
                         }
                     }
                 }
                 maxPriorityOrder.setBln(false);
             }
-
             try {
                 unit.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
     private Order findMaxPriority(){
         Order order = null;
-        if (!orders.isEmpty() && orders != null) {
+        if (!orders.isEmpty()) {
             for (int i = 0; i < orders.size(); i++) {
                 Order toCompare = orders.get(i);
                 if (toCompare == null) continue;

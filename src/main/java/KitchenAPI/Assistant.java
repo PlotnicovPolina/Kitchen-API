@@ -13,7 +13,8 @@ import java.util.concurrent.TimeUnit;
 class Assistant implements Runnable{
     private static final TimeUnit unit = KitchenApiApplication.getUnit();
     private final ArrayList<Order> orders = Handler.getOrders();
-    private static final  String POST_API_URL = "http://dinning-hall:8080/distribution";
+//    private static final  String POST_API_URL = "http://dinning-hall:8080/distribution";
+    private static final  String POST_API_URL = "http://localhost:8080/distribution";
 
     @Override
     public void run() {
