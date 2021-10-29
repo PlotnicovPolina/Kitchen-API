@@ -23,7 +23,6 @@ public class Handler {
     @PostMapping(value = "/order", consumes = MediaType.APPLICATION_JSON_VALUE)
     public String get(@RequestBody Order order) {
         order.setEndPriority();
-//        System.out.println(order);
         add(order);
         return "200";
     }
